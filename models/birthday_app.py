@@ -28,7 +28,7 @@ class Person(SQLModel, table=True):
     )
     first_name: constr(max_length=64, strip_whitespace=True) = Field(default="")
     last_name: constr(max_length=64, strip_whitespace=True) = Field(default="")
-    birth_date: dt.date | None
+    birth_date: dt.datetime | None
 
     @validator("phone_number")
     def validate_phone_number(cls, v):
@@ -51,3 +51,9 @@ class Person(SQLModel, table=True):
             if n.country_code == 44
             else PhoneNumberFormat.INTERNATIONAL,
         )
+
+    @validator("birth_date", pre=True)
+    def transform_timestamp(cls, v):
+        if isinstance(v, int):
+            v = dt.datetime.fromtimestamp(v / 1e3)
+        return v

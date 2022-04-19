@@ -14,6 +14,7 @@ alembic = "^1.7.6"
 python-decouple = "^3.6"
 fastapi = "0.73.0"
 phonenumbers = "^8.12.46"
+psycopg2 = "^2.9.3"
 
 
 [tool.poetry.dev-dependencies]

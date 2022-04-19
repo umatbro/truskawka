@@ -1,0 +1,16 @@
+version: "3.7"
+volumes:
+  truskawka_db_volume:
+
+services:
+  db:
+    container_name: truskawka-db
+    image: postgres:11
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: truskawka_db
+    volumes:
+      - truskawka_db_volume:/var/lib/postgresql/data/
+    ports:
+      - "5432:5432"
