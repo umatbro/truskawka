@@ -1,3 +1,4 @@
+import datetime as dt
 from typing import Optional
 
 import strawberry
@@ -56,13 +57,78 @@ def get_person(info: Info, id: strawberry.ID) -> Optional[PersonType]:
         return session.exec(statement).first()
 
 
+def create_person(
+    info: Info,
+    first_name: str,
+    birth_date: dt.date,
+    phone_number: str = "",
+    last_name: str = "",
+    email: str = "",
+) -> PersonType:
+    person = Person(
+        first_name=first_name,
+        last_name=last_name,
+        birth_date=birth_date,
+        phone_number=phone_number,
+        email=email,
+    )
+    with Session(info.context.engine) as session:
+        session.add(person)
+        session.commit()
+        return PersonType.from_pydantic(person)
+
+
+def delete_person(info: Info, id: strawberry.ID) -> PersonType:
+    with Session(info.context.engine) as session:
+        statement = select(Person).where(Person.id == id)
+        person_found = session.exec(statement).one()
+        return_obj = PersonType.from_pydantic(person_found)
+        session.delete(person_found)
+        session.commit()
+        return return_obj
+
+
+def edit_person(
+    info: Info,
+    id: strawberry.ID,
+    first_name: Optional[str] = None,
+    last_name: Optional[str] = None,
+    email: Optional[str] = None,
+    phone_number: Optional[str] = None,
+    birth_date: Optional[dt.date] = None,
+) -> PersonType:
+    with Session(info.context.engine) as session:
+        statement = select(Person).where(Person.id == id)
+        person = session.exec(statement).one()
+        if first_name is not None:
+            person.first_name = first_name
+        if last_name is not None:
+            person.last_name = last_name
+        if email is not None:
+            person.email = email
+        if phone_number is not None:
+            person.phone_number = phone_number
+        if birth_date is not None:
+            person.birth_date = birth_date
+        session.add(person)
+        session.commit()
+        return PersonType.from_pydantic(person)
+
+
 @strawberry.type
 class Query:
     people: list[PersonType] = strawberry.field(resolver=search_people)
     person: PersonType = strawberry.field(resolver=get_person)
 
 
-schema = strawberry.Schema(query=Query)
+@strawberry.type
+class Mutation:
+    create_person = strawberry.mutation(create_person)
+    delete_person = strawberry.mutation(delete_person)
+    edit_person = strawberry.mutation(edit_person)
+
+
+schema = strawberry.Schema(query=Query, mutation=Mutation)
 graphql_app = GraphQLRouter(
     schema, path="/", context_getter=get_graphql_context
 )
