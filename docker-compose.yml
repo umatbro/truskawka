@@ -3,6 +3,15 @@ volumes:
   truskawka_db_volume:
 
 services:
+  backend:
+    container_name: strawberry
+    build:
+      context: .
+    entrypoint: "poetry run python main.py"
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres@db:5432/truskawka_db"
   db:
     container_name: truskawka-db
     image: postgres:11
